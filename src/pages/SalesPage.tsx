@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-import { UserRole, Sale, SaleItem, GiftItem } from '../types';
+import { UserRole, Sale, SaleItem, GiftItem, Product, Inventory, Promotion } from '../types';
 import { 
   ShoppingCart, 
   Plus, 
@@ -36,8 +36,8 @@ const SalesPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Получаем товары доступные на текущей точке
-  const availableProducts = products.filter(product => {
-    const inv = inventory.find(i => 
+  const availableProducts = products.filter((product: Product) => {
+    const inv = inventory.find((i: Inventory) => 
       i.locationId === user?.locationId && 
       i.productId === product.id && 
       i.currentStock > 0
@@ -46,7 +46,7 @@ const SalesPage: React.FC = () => {
   });
 
   const addToCart = (productId: string) => {
-    const product = products.find(p => p.id === productId);
+    const product = products.find((p: Product) => p.id === productId);
     if (!product) return;
 
     const existingItem = currentSale.items.find(item => item.productId === productId);
@@ -96,13 +96,13 @@ const SalesPage: React.FC = () => {
   const calculateGifts = () => {
     const newGifts: GiftItem[] = [];
     
-    promotions.forEach(promotion => {
+    promotions.forEach((promotion: Promotion) => {
       if (!promotion.isActive) return;
       
-      promotion.conditions.forEach(condition => {
+      promotion.conditions.forEach((condition: any) => {
         const item = currentSale.items.find(i => i.productId === condition.productId);
         if (item && item.quantity >= condition.minQuantity) {
-          promotion.gifts.forEach(gift => {
+          promotion.gifts.forEach((gift: any) => {
             newGifts.push({
               productId: gift.productId,
               quantity: gift.quantity,
@@ -197,8 +197,8 @@ const SalesPage: React.FC = () => {
       <div className="card">
         <h2 className="text-lg font-semibold mb-4">Доступные товары</h2>
         <div className="grid grid-cols-2 gap-3">
-          {availableProducts.map(product => {
-            const inv = inventory.find(i => 
+          {availableProducts.map((product: Product) => {
+            const inv = inventory.find((i: Inventory) => 
               i.locationId === user?.locationId && i.productId === product.id
             );
             const isLowStock = inv && inv.currentStock <= inv.minStock;
@@ -243,7 +243,7 @@ const SalesPage: React.FC = () => {
           
           <div className="space-y-3">
             {currentSale.items.map(item => {
-              const product = products.find(p => p.id === item.productId);
+              const product = products.find((p: Product) => p.id === item.productId);
               if (!product) return null;
               
               return (
@@ -286,7 +286,7 @@ const SalesPage: React.FC = () => {
                 Подарки
               </h3>
               {currentSale.gifts.map((gift, index) => {
-                const product = products.find(p => p.id === gift.productId);
+                const product = products.find((p: Product) => p.id === gift.productId);
                 return (
                   <div key={index} className="text-sm text-green-700">
                     {product?.name} - {gift.quantity} {product?.unit} ({gift.reason})
