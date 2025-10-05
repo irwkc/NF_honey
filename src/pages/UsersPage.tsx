@@ -44,6 +44,21 @@ const UsersPage: React.FC = () => {
   
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState<{
+    name: string;
+    email: string;
+    role: UserRole;
+    locationId: string;
+    phone: string;
+    isActive: boolean;
+  }>({
+    name: '',
+    email: '',
+    role: UserRole.PROMOTER,
+    locationId: '',
+    phone: '',
+    isActive: true,
+  });
   const [newUser, setNewUser] = useState<{
     name: string;
     email: string;
@@ -69,6 +84,44 @@ const UsersPage: React.FC = () => {
       </div>
     );
   }
+
+  const openEditForm = (user: User) => {
+    setEditingUser(user);
+    setEditForm({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      locationId: user.locationId || '',
+      phone: user.phone || '',
+      isActive: user.isActive,
+    });
+  };
+
+  const saveEdit = () => {
+    if (!editingUser || !editForm.name || !editForm.email) {
+      alert('Заполните все обязательные поля');
+      return;
+    }
+
+    // Проверяем, что email не занят другим пользователем
+    const emailExists = users.find(u => u.email === editForm.email && u.id !== editingUser.id);
+    if (emailExists) {
+      alert('Пользователь с таким email уже существует');
+      return;
+    }
+
+    updateUser(editingUser.id, {
+      name: editForm.name,
+      email: editForm.email,
+      role: editForm.role,
+      locationId: editForm.locationId,
+      phone: editForm.phone,
+      isActive: editForm.isActive,
+    });
+
+    setEditingUser(null);
+    alert('Пользователь успешно обновлен!');
+  };
 
   const createUser = () => {
     if (!newUser.name || !newUser.email) {
@@ -277,7 +330,7 @@ const UsersPage: React.FC = () => {
                     {userItem.isActive ? 'Деактивировать' : 'Активировать'}
                   </button>
                   <button
-                    onClick={() => setEditingUser(userItem)}
+                    onClick={() => openEditForm(userItem)}
                     className="text-blue-600 hover:text-blue-800"
                   >
                     <Edit className="w-4 h-4" />
@@ -410,6 +463,126 @@ const UsersPage: React.FC = () => {
               >
                 <Save className="w-4 h-4 mr-2 inline" />
                 Создать пользователя
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно редактирования пользователя */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Редактировать пользователя</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Имя пользователя *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="input-field"
+                  placeholder="Например: Иван Петров"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="input-field"
+                  placeholder="user@newformat.ru"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Роль
+                  </label>
+                  <select
+                    value={editForm.role}
+                    onChange={(e) => setEditForm(prev => ({ 
+                      ...prev, 
+                      role: e.target.value as UserRole 
+                    }))}
+                    className="input-field"
+                  >
+                    <option value={UserRole.PROMOTER}>Промоутер</option>
+                    <option value={UserRole.ADMIN}>Администратор</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Телефон
+                  </label>
+                  <input
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="input-field"
+                    placeholder="+7 999 123 45 67"
+                  />
+                </div>
+              </div>
+              
+              {editForm.role === UserRole.PROMOTER && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Точка продаж
+                  </label>
+                  <select
+                    value={editForm.locationId}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, locationId: e.target.value }))}
+                    className="input-field"
+                  >
+                    <option value="">Выберите точку</option>
+                    {locations.map(location => (
+                      <option key={location.id} value={location.id}>
+                        {location.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Статус
+                </label>
+                <select
+                  value={editForm.isActive ? 'active' : 'inactive'}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, isActive: e.target.value === 'active' }))}
+                  className="input-field"
+                >
+                  <option value="active">Активен</option>
+                  <option value="inactive">Неактивен</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setEditingUser(null)}
+                className="flex-1 btn-secondary"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={!editForm.name || !editForm.email}
+                className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-4 h-4 mr-2 inline" />
+                Сохранить изменения
               </button>
             </div>
           </div>
