@@ -20,6 +20,7 @@ const InventoryPage: React.FC = () => {
     products, 
     locations, 
     inventory, 
+    addInventory,
     updateInventory, 
     getLowStockItems,
     suppliers,
@@ -29,8 +30,56 @@ const InventoryPage: React.FC = () => {
   const [editingItem, setEditingItem] = useState<{ locationId: string; productId: string } | null>(null);
   const [newStock, setNewStock] = useState<number>(0);
   const [showOrderForm, setShowOrderForm] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newInventory, setNewInventory] = useState<{
+    locationId: string;
+    productId: string;
+    currentStock: number;
+    minStock: number;
+  }>({
+    locationId: '',
+    productId: '',
+    currentStock: 0,
+    minStock: 5,
+  });
 
   const lowStockItems = getLowStockItems();
+
+  const addProductToLocation = () => {
+    if (!newInventory.locationId || !newInventory.productId) {
+      alert('Выберите точку и товар');
+      return;
+    }
+
+    // Проверяем, не существует ли уже такой товар на этой точке
+    const existingInventory = inventory.find(inv => 
+      inv.locationId === newInventory.locationId && inv.productId === newInventory.productId
+    );
+
+    if (existingInventory) {
+      alert('Этот товар уже есть на данной точке. Используйте редактирование для изменения количества.');
+      return;
+    }
+
+    addInventory({
+      locationId: newInventory.locationId,
+      productId: newInventory.productId,
+      currentStock: newInventory.currentStock,
+      minStock: newInventory.minStock,
+      maxStock: newInventory.currentStock * 2, // Максимальный остаток = текущий * 2
+      lastUpdated: new Date(),
+      lastRestock: new Date(),
+    });
+
+    setNewInventory({
+      locationId: '',
+      productId: '',
+      currentStock: 0,
+      minStock: 5,
+    });
+    setShowAddForm(false);
+    alert('Товар успешно добавлен на точку!');
+  };
 
   // Для промоутера - только просмотр остатков на своей точке
   if (hasRole(UserRole.PROMOTER)) {
@@ -159,8 +208,19 @@ const InventoryPage: React.FC = () => {
     <div className="space-y-6">
       {/* Заголовок */}
       <div className="card bg-gradient-to-r from-honey-500 to-honey-600 text-white">
-        <h1 className="text-xl font-semibold mb-2">Управление остатками</h1>
-        <p className="text-honey-100">Контроль и пополнение товарных остатков</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold mb-2">Управление остатками</h1>
+            <p className="text-honey-100">Контроль и пополнение товарных остатков</p>
+          </div>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="btn-secondary"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Добавить товар
+          </button>
+        </div>
       </div>
 
       {/* Статистика */}
@@ -362,6 +422,100 @@ const InventoryPage: React.FC = () => {
                 className="flex-1 btn-primary"
               >
                 Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно добавления товара на точку */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Добавить товар на точку</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Точка продаж *
+                </label>
+                <select
+                  value={newInventory.locationId}
+                  onChange={(e) => setNewInventory(prev => ({ ...prev, locationId: e.target.value }))}
+                  className="input-field"
+                >
+                  <option value="">Выберите точку</option>
+                  {locations.map(location => (
+                    <option key={location.id} value={location.id}>
+                      {location.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Товар *
+                </label>
+                <select
+                  value={newInventory.productId}
+                  onChange={(e) => setNewInventory(prev => ({ ...prev, productId: e.target.value }))}
+                  className="input-field"
+                >
+                  <option value="">Выберите товар</option>
+                  {products.filter(p => p.isActive).map(product => (
+                    <option key={product.id} value={product.id}>
+                      {product.name} - {product.basePrice} ₽/{product.unit}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Начальное количество
+                </label>
+                <input
+                  type="number"
+                  value={newInventory.currentStock}
+                  onChange={(e) => setNewInventory(prev => ({ ...prev, currentStock: parseFloat(e.target.value) || 0 }))}
+                  className="input-field"
+                  min="0"
+                  step="0.1"
+                  placeholder="0"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Минимальный остаток
+                </label>
+                <input
+                  type="number"
+                  value={newInventory.minStock}
+                  onChange={(e) => setNewInventory(prev => ({ ...prev, minStock: parseFloat(e.target.value) || 0 }))}
+                  className="input-field"
+                  min="0"
+                  step="0.1"
+                  placeholder="5"
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="flex-1 btn-secondary"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={addProductToLocation}
+                disabled={!newInventory.locationId || !newInventory.productId}
+                className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus className="w-4 h-4 mr-2 inline" />
+                Добавить
               </button>
             </div>
           </div>

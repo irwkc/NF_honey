@@ -14,6 +14,7 @@ interface DataContextType {
   
   // Остатки
   inventory: Inventory[];
+  addInventory: (inventory: Omit<Inventory, 'id'>) => void;
   updateInventory: (locationId: string, productId: string, quantity: number) => void;
   getLowStockItems: () => Inventory[];
   
@@ -133,6 +134,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     saveToStorage('honeyLocations', updatedLocations);
   };
 
+  const addInventory = (inventoryItem: Omit<Inventory, 'id'>) => {
+    const newInventory: Inventory = {
+      ...inventoryItem,
+      id: `inv${Date.now()}`,
+    };
+    const updatedInventory = [...inventory, newInventory];
+    setInventory(updatedInventory);
+    saveToStorage('honeyInventory', updatedInventory);
+  };
+
   const updateInventory = (locationId: string, productId: string, quantity: number) => {
     const updatedInventory = inventory.map(inv => 
       inv.locationId === locationId && inv.productId === productId
@@ -211,6 +222,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     addLocation,
     updateLocation,
     inventory,
+    addInventory,
     updateInventory,
     getLowStockItems,
     sales,
