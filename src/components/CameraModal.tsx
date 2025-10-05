@@ -13,15 +13,6 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    startCamera();
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [facingMode]);
-
   const startCamera = async () => {
     try {
       setError(null);
@@ -49,6 +40,15 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
       setError('Не удалось получить доступ к камере. Проверьте разрешения.');
     }
   };
+
+  useEffect(() => {
+    startCamera();
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [facingMode]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;

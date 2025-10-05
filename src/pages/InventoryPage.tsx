@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-import { UserRole, Inventory, Product, Location } from '../types';
+import { UserRole, Inventory } from '../types';
 import { 
   Package, 
   AlertTriangle, 
   Plus, 
   Minus, 
-  Edit, 
-  CheckCircle,
-  TrendingDown,
-  TrendingUp,
-  RefreshCw
+  Edit
 } from 'lucide-react';
 
 const InventoryPage: React.FC = () => {
@@ -29,7 +25,6 @@ const InventoryPage: React.FC = () => {
   
   const [editingItem, setEditingItem] = useState<{ locationId: string; productId: string } | null>(null);
   const [newStock, setNewStock] = useState<number>(0);
-  const [showOrderForm, setShowOrderForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newInventory, setNewInventory] = useState<{
     locationId: string;

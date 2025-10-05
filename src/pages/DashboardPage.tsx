@@ -5,16 +5,14 @@ import { UserRole } from '../types';
 import { 
   ShoppingCart, 
   Package, 
-  TrendingUp, 
   Users, 
   AlertTriangle,
   CheckCircle,
-  Clock,
   DollarSign
 } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
-  const { user, hasRole } = useAuth();
+  const { hasRole } = useAuth();
 
   // Получаем реальные данные из контекста
   const { sales, inventory, products } = useData();
