@@ -97,6 +97,9 @@ const LoginPage: React.FC = () => {
           <p className="text-sm text-gray-500">
             © 2024 New Format. Все права защищены.
           </p>
+          <p className="text-xs text-gray-400 mt-1">
+            v1.0.0 - Автодеплой активен
+          </p>
         </div>
       </div>
     </div>
