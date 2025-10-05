@@ -13,6 +13,7 @@ import {
   Calculator,
   Scale
 } from 'lucide-react';
+import CameraModal from '../components/CameraModal';
 
 const SalesPage: React.FC = () => {
   const { user, hasRole } = useAuth();
@@ -118,15 +119,14 @@ const SalesPage: React.FC = () => {
 
   const takePhoto = () => {
     setShowCamera(true);
-    // В реальном приложении здесь будет работа с камерой
-    setTimeout(() => {
-      const mockPhoto = `photo_${Date.now()}.jpg`;
-      setCurrentSale(prev => ({
-        ...prev,
-        photos: [...prev.photos, mockPhoto]
-      }));
-      setShowCamera(false);
-    }, 1000);
+  };
+
+  const capturePhoto = (imageDataUrl: string) => {
+    setCurrentSale(prev => ({
+      ...prev,
+      photos: [...prev.photos, imageDataUrl]
+    }));
+    setShowCamera(false);
   };
 
   const processSale = async () => {
@@ -326,15 +326,23 @@ const SalesPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {currentSale.photos.map((photo, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-sm">Фото {index + 1}</span>
+            <div className="grid grid-cols-2 gap-3">
+              {currentSale.photos.map((photo, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={photo}
+                    alt={`Фото товара ${index + 1}`}
+                    className="w-full h-24 object-cover rounded-lg"
+                  />
+                  <div className="absolute top-1 right-1">
+                    <CheckCircle className="w-4 h-4 text-green-500 bg-white rounded-full" />
+                  </div>
+                  <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                    Фото {index + 1}
+                  </div>
                 </div>
-                <span className="text-xs text-gray-500">{photo}</span>
-              </div>
-            ))}
+              ))}
+            </div>
             <button
               onClick={takePhoto}
               className="w-full btn-secondary"
@@ -393,16 +401,12 @@ const SalesPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Камера (имитация) */}
+      {/* Реальная камера */}
       {showCamera && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 text-center">
-            <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
-              <Camera className="w-8 h-8 text-gray-600" />
-            </div>
-            <p className="text-gray-600">Имитация камеры...</p>
-          </div>
-        </div>
+        <CameraModal 
+          onCapture={capturePhoto} 
+          onClose={() => setShowCamera(false)} 
+        />
       )}
     </div>
   );

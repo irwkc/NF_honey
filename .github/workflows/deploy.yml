@@ -1,0 +1,85 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build application
+      run: npm run build
+      
+    - name: Create deployment archive
+      run: |
+        tar -czf honey-app.tar.gz -C build .
+        
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        script: |
+          # Создаем временную директорию
+          mkdir -p /tmp/honey-deploy
+          cd /tmp/honey-deploy
+          
+          # Создаем бэкап текущей версии
+          if [ -d "/var/www/honey" ]; then
+            cp -r /var/www/honey /var/www/honey.backup.$(date +%Y%m%d_%H%M%S)
+          fi
+          
+    - name: Upload files
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        source: "honey-app.tar.gz"
+        target: "/tmp/honey-deploy/"
+        
+    - name: Extract and deploy
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        script: |
+          # Извлекаем файлы
+          cd /tmp/honey-deploy
+          tar -xzf honey-app.tar.gz -C /var/www/honey/
+          
+          # Устанавливаем правильные права доступа
+          chown -R www-data:www-data /var/www/honey
+          chmod -R 755 /var/www/honey
+          
+          # Перезагружаем nginx
+          systemctl reload nginx
+          
+          # Очищаем временные файлы
+          rm -rf /tmp/honey-deploy
+          
+          # Проверяем статус
+          systemctl status nginx --no-pager
+          
+          echo "✅ Deployment completed successfully!"
+          echo "🌐 Application is available at: http://${{ secrets.SERVER_HOST }}"

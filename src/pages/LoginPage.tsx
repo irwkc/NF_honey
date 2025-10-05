@@ -90,24 +90,6 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Demo Accounts */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-3">Демо-аккаунты:</p>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Администратор:</span>
-                <span className="font-mono">admin@newformat.ru</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Промоутер:</span>
-                <span className="font-mono">promoter@newformat.ru</span>
-              </div>
-              <div className="mt-2 text-center">
-                <span className="text-gray-500">Пароль для всех: </span>
-                <span className="font-mono font-medium">123456</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
